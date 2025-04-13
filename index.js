@@ -140,6 +140,14 @@ app.put('/users/:userId/status', async (req, res) => {
   }
 });
 
+app.post('/users/login', async (req, res) => {
+  const { username, password } = req.body;
+  const user = await User.findOne({ username, password });
+  if (!user) {
+    return res.status(401).json({ message: "Invalid credentials" });
+  }
+  res.json(user); // you might want to send a token here later
+});
 
 
 // Start the server and initialize Socket.io
