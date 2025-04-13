@@ -5,3 +5,7 @@ const userSchema = new mongoose.Schema({
   status: { type: String, enum: ['online', 'offline'], default: 'offline' },
   messages: [messageSchema]
 });
+
+const User = mongoose.model('User', userSchema);
+
+module.exports = User;
