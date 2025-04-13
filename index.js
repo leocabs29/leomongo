@@ -98,6 +98,33 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+// Route to create a new user
+app.post('/users', async (req, res) => {
+  const { name, username, password } = req.body;
+
+  // Make sure that all required fields are provided
+  if (!name || !username || !password) {
+    return res.status(400).send('Name, username, and password are required');
+  } 
+
+  try {
+    // Check if the username already exists
+    const existingUser = await User.findOne({ username });
+    if (existingUser) {
+      return res.status(400).send('Username already exists');
+    }
+
+    // Create the new user and set the default status to 'offline'
+    const newUser = new User({ name, username, password });
+    await newUser.save();
+
+    res.status(201).json(newUser);  // Respond with the newly created user
+  } catch (err) {
+    console.error('Error creating user:', err.message);
+    res.status(500).send('Error creating user');
+  }
+});
+
 // Start the server and initialize Socket.io
 const server = app.listen(port, () => {
   console.log(`App is running on port ${port}`);
@@ -136,32 +163,7 @@ io.on('connection', (socket) => {
         console.error('Error finding user:', err.message);
       });
   });
-// Route to create a new user
-app.post('/users', async (req, res) => {
-  const { name, username, password } = req.body;
 
-  // Make sure that all required fields are provided
-  if (!name || !username || !password) {
-    return res.status(400).send('Name, username, and password are required');
-  } 
-
-  try {
-    // Check if the username already exists
-    const existingUser = await User.findOne({ username });
-    if (existingUser) {
-      return res.status(400).send('Username already exists');
-    }
-
-    // Create the new user and set the default status to 'offline'
-    const newUser = new User({ name, username, password });
-    await newUser.save();
-
-    res.status(201).json(newUser);  // Respond with the newly created user
-  } catch (err) {
-    console.error('Error creating user:', err.message);
-    res.status(500).send('Error creating user');
-  }
-});
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
