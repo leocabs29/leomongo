@@ -159,7 +159,7 @@ app.post('/users', async (req, res) => {
   // Make sure that all required fields are provided
   if (!name || !username || !password) {
     return res.status(400).send('Name, username, and password are required');
-  }
+  } 
 
   try {
     // Check if the username already exists
