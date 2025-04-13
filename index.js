@@ -1,10 +1,19 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const app = express();
 
 // Use the port that Vercel provides, or 3000 for local development
 const port = process.env.PORT || 3000;
+
+// Enable CORS
+app.use(cors({
+  origin: 'http://localhost:5173'
+}));
+
+// Middleware to parse JSON requests
+app.use(express.json());
 
 // Ensure MONGO_URI is set in the environment variables
 const mongoURI = process.env.MONGO_URI;
@@ -18,17 +27,14 @@ mongoose.connect(mongoURI)
   .then(() => console.log('Connected to MongoDB'))
   .catch(err => {
     console.error('Could not connect to MongoDB', err);
-    process.exit(1);  // Exit if connection fails
+    process.exit(1);
   });
-
-// Middleware to parse JSON requests
-app.use(express.json());
 
 // Define the User model (can be split into another file for organization)
 const User = mongoose.model('User', new mongoose.Schema({
   name: { type: String, required: true },
   username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }  // Change password type to String for security
+  password: { type: String, required: true }
 }));
 
 // Route to get all users
@@ -42,21 +48,19 @@ app.get('/users', async (req, res) => {
   }
 });
 
-// Route to create a new user (POST request)
+// Route to create a new user
 app.post('/users', async (req, res) => {
   const { name, username, password } = req.body;
 
-  // Validate incoming data
   if (!name || !username || !password) {
     return res.status(400).send('Name, username, and password are required');
   }
 
   try {
-    // Create a new user
     const newUser = new User({ name, username, password });
-    await newUser.save(); // Save the user to MongoDB
+    await newUser.save();
 
-    res.status(201).json(newUser); // Respond with the created user
+    res.status(201).json(newUser);
   } catch (err) {
     console.error('Error creating user:', err.message);
     res.status(500).send('Error creating user');
