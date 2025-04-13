@@ -65,7 +65,7 @@ app.get('/users', async (req, res) => {
 // Route to send a message to the global chat
 app.post('/users/:id/messages', async (req, res) => {
   const { text, senderName } = req.body;
-
+  console.log(req.body);
   if (!text || !senderName) {
     return res.status(400).send('Message text and sender name are required');
   }
