@@ -12,7 +12,6 @@ app.use(cors({
   origin: ['http://localhost:5173', 'https://globalchatleocabs.netlify.app']
 }));
 
-
 // Middleware to parse JSON requests
 app.use(express.json());
 
@@ -31,12 +30,21 @@ mongoose.connect(mongoURI)
     process.exit(1);
   });
 
-// Define the User model (can be split into another file for organization)
-const User = mongoose.model('User', new mongoose.Schema({
+// Define the User model
+const messageSchema = new mongoose.Schema({
+  text: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now }
+});
+
+const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-}));
+  email: { type: String, required: true, unique: true },
+  age: { type: Number, required: true },
+  status: { type: String, enum: ['online', 'offline'], default: 'offline' },
+  messages: [messageSchema]  // Array of message objects
+});
+
+const User = mongoose.model('User', userSchema);
 
 // Route to get all users
 app.get('/users', async (req, res) => {
@@ -51,14 +59,14 @@ app.get('/users', async (req, res) => {
 
 // Route to create a new user
 app.post('/users', async (req, res) => {
-  const { name, username, password } = req.body;
+  const { name, email, age } = req.body;
 
-  if (!name || !username || !password) {
-    return res.status(400).send('Name, username, and password are required');
+  if (!name || !email || !age) {
+    return res.status(400).send('Name, email, and age are required');
   }
 
   try {
-    const newUser = new User({ name, username, password });
+    const newUser = new User({ name, email, age });
     await newUser.save();
 
     res.status(201).json(newUser);
@@ -68,19 +76,25 @@ app.post('/users', async (req, res) => {
   }
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello World!');
-});
-
+// Route to update user status (online/offline)
 app.put('/users/:id/status', async (req, res) => {
   const { status } = req.body;
+
   if (!['online', 'offline'].includes(status)) {
-    return res.status(400).send('Invalid status');
+    return res.status(400).send('Invalid status value');
   }
 
   try {
-    const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true });
-    if (!user) return res.status(404).send('User not found');
+    const user = await User.findByIdAndUpdate(
+      req.params.id,
+      { status: status },
+      { new: true }
+    );
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
     res.json(user);
   } catch (err) {
     console.error('Error updating status:', err.message);
@@ -88,38 +102,37 @@ app.put('/users/:id/status', async (req, res) => {
   }
 });
 
-
+// Route to add a message for a user
 app.post('/users/:id/messages', async (req, res) => {
   const { text } = req.body;
-  if (!text) return res.status(400).send('Message text is required');
+
+  if (!text) {
+    return res.status(400).send('Message text is required');
+  }
 
   try {
     const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send('User not found');
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
 
     user.messages.push({ text });
     await user.save();
+
     res.status(201).json(user);
   } catch (err) {
-    console.error('Error sending message:', err.message);
-    res.status(500).send('Error sending message');
+    console.error('Error adding message:', err.message);
+    res.status(500).send('Error adding message');
   }
 });
 
-app.get('/users/:id/messages', async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    if (!user) return res.status(404).send('User not found');
-
-    res.json(user.messages);
-  } catch (err) {
-    console.error('Error fetching messages:', err.message);
-    res.status(500).send('Error fetching messages');
-  }
+// Default route
+app.get('/', (req, res) => {
+  res.send('Hello World!');
 });
-
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`App is running on port ${port}`);
 });
