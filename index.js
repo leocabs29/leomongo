@@ -154,22 +154,22 @@ io.on('connection', (socket) => {
   });
 // Route to create a new user
 app.post('/users', async (req, res) => {
-  const { name, email, age, username, password } = req.body;
+  const { name, username, password } = req.body;
 
   // Make sure that all required fields are provided
-  if (!name || !email || !age || !username || !password) {
-    return res.status(400).send('Name, email, age, username, and password are required');
+  if (!name || !username || !password) {
+    return res.status(400).send('Name, username, and password are required');
   }
 
   try {
-    // Check if the username or email already exists
-    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    // Check if the username already exists
+    const existingUser = await User.findOne({ username });
     if (existingUser) {
-      return res.status(400).send('Email or username already exists');
+      return res.status(400).send('Username already exists');
     }
 
-    // Create the new user and save it to the database
-    const newUser = new User({ name, email, age, username, password });
+    // Create the new user and set the default status to 'offline'
+    const newUser = new User({ name, username, password });
     await newUser.save();
 
     res.status(201).json(newUser);  // Respond with the newly created user
