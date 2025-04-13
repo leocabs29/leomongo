@@ -60,23 +60,7 @@ app.get('/users', async (req, res) => {
 });
 
 // Route to create a new user
-app.post('/users', async (req, res) => {
-  const { name, email, age } = req.body;
 
-  if (!name || !email || !age) {
-    return res.status(400).send('Name, email, and age are required');
-  }
-
-  try {
-    const newUser = new User({ name, email, age });
-    await newUser.save();
-
-    res.status(201).json(newUser);
-  } catch (err) {
-    console.error('Error creating user:', err.message);
-    res.status(500).send('Error creating user');
-  }
-});
 
 // Route to send a message to the global chat
 app.post('/users/:id/messages', async (req, res) => {
