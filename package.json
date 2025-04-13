@@ -4,6 +4,7 @@
     "env": "^0.0.2",
     "express": "^5.1.0",
     "mongodb": "^6.15.0",
-    "moongose": "^1.0.0"
+    "moongose": "^1.0.0",
+    "socket.io": "^4.8.1"
   }
 }
