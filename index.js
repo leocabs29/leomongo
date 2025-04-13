@@ -72,6 +72,53 @@ app.get('/', (req, res) => {
   res.send('Hello World!');
 });
 
+app.put('/users/:id/status', async (req, res) => {
+  const { status } = req.body;
+  if (!['online', 'offline'].includes(status)) {
+    return res.status(400).send('Invalid status');
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, { status }, { new: true });
+    if (!user) return res.status(404).send('User not found');
+    res.json(user);
+  } catch (err) {
+    console.error('Error updating status:', err.message);
+    res.status(500).send('Error updating status');
+  }
+});
+
+
+app.post('/users/:id/messages', async (req, res) => {
+  const { text } = req.body;
+  if (!text) return res.status(400).send('Message text is required');
+
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).send('User not found');
+
+    user.messages.push({ text });
+    await user.save();
+    res.status(201).json(user);
+  } catch (err) {
+    console.error('Error sending message:', err.message);
+    res.status(500).send('Error sending message');
+  }
+});
+
+app.get('/users/:id/messages', async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).send('User not found');
+
+    res.json(user.messages);
+  } catch (err) {
+    console.error('Error fetching messages:', err.message);
+    res.status(500).send('Error fetching messages');
+  }
+});
+
+
 // Start the server
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
