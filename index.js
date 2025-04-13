@@ -40,10 +40,10 @@ const messageSchema = new mongoose.Schema({
 
 const userSchema = new mongoose.Schema({
   name: { type: String, required: true },
-  email: { type: String, required: true, unique: true },
-  age: { type: Number, required: true },
+  username: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
   status: { type: String, enum: ['online', 'offline'], default: 'offline' },
-  messages: [messageSchema]  // Array of message objects
+  messages: [messageSchema]
 });
 
 const User = mongoose.model('User', userSchema);
